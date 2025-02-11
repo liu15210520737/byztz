@@ -1,5 +1,5 @@
-const redisUrl = 'https://inspired-ox-13540.upstash.io';
-const redisToken = 'ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA';
+const redisUrl = 'YOUR_UPSTASH_REDIS_URL';
+const redisToken = 'YOUR_UPSTASH_REDIS_TOKEN';
 
 const roomCodeInput = document.getElementById('room-code');
 const joinButton = document.getElementById('join-room');
@@ -9,8 +9,12 @@ const playersList = document.getElementById('players-list');
 const cardDisplay = document.getElementById('card-display');
 const chatInput = document.getElementById('chat-input');
 const sendChatButton = document.getElementById('send-chat');
+const chatLog = document.getElementById('chat-log');
+const nextPlayerButton = document.getElementById('next-player');
 
 let currentRoom = null;
+let players = [];
+let currentPlayerIndex = 0;
 
 // 加入房间
 joinButton.addEventListener('click', async () => {
@@ -23,6 +27,7 @@ joinButton.addEventListener('click', async () => {
 
     // 获取房间信息
     await fetchRoomData();
+    startChatPolling(); // 开始轮询聊天消息
 });
 
 // 获取房间数据
@@ -34,8 +39,9 @@ async function fetchRoomData() {
         }
     });
     const data = await response.json();
-    updatePlayersList(data.players);
-    displayRandomCard(data.cards);
+    players = data.players;
+    updatePlayersList(players);
+    displayNextCard();
 }
 
 // 更新玩家列表
@@ -48,17 +54,73 @@ function updatePlayersList(players) {
     });
 }
 
-// 显示随机卡片
-function displayRandomCard(cards) {
-    const randomIndex = Math.floor(Math.random() * cards.length);
-    cardDisplay.textContent = cards[randomIndex];
+// 显示下一个玩家的卡片
+async function displayNextCard() {
+    const currentPlayer = players[currentPlayerIndex];
+    const card = await fetchCardForPlayer(currentPlayer);
+    cardDisplay.textContent = `${currentPlayer} 不能: ${card}`;
+    nextPlayerButton.style.display = 'block';
+}
+
+// 从 Redis 获取卡片内容
+async function fetchCardForPlayer(player) {
+    const response = await fetch(`${redisUrl}/v1/keys/${currentRoom}/cards/${player}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${redisToken}`
+        }
+    });
+    const data = await response.json();
+    return data.card;
 }
 
 // 发送聊天消息
-sendChatButton.addEventListener('click', () => {
+sendChatButton.addEventListener('click', async () => {
     const message = chatInput.value;
     if (message) {
-        // 这里可以添加发送消息到 Redis 的逻辑
+        await sendMessage(message);
         chatInput.value = '';
     }
+});
+
+// 发送消息到 Redis
+async function sendMessage(message) {
+    await fetch(`${redisUrl}/v1/keys/${currentRoom}/messages`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${redisToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message })
+    });
+}
+
+// 开始轮询聊天消息
+async function startChatPolling() {
+    setInterval(async () => {
+        const response = await fetch(`${redisUrl}/v1/keys/${currentRoom}/messages`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${redisToken}`
+            }
+        });
+        const data = await response.json();
+        updateChatLog(data.messages);
+    }, 2000); // 每2秒轮询一次
+}
+
+// 更新聊天记录
+function updateChatLog(messages) {
+    chatLog.innerHTML = '';
+    messages.forEach(msg => {
+        const messageElement = document.createElement('div');
+        messageElement.textContent = msg;
+        chatLog.appendChild(messageElement);
+    });
+}
+
+// 处理下一位玩家
+nextPlayerButton.addEventListener('click', () => {
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+    displayNextCard();
 });
