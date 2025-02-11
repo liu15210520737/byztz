@@ -18,8 +18,12 @@
             <h2>房间: <span id="current-room"></span></h2>
             <div id="players-list"></div>
             <div id="card-display"></div>
-            <input type="text" id="chat-input" placeholder="输入消息...">
-            <button id="send-chat">发送</button>
+            <div id="chat-area">
+                <div id="chat-log"></div>
+                <input type="text" id="chat-input" placeholder="输入消息...">
+                <button id="send-chat">发送</button>
+            </div>
+            <button id="next-player" style="display: none;">下一位玩家</button>
         </div>
     </div>
     <script src="script.js"></script>
