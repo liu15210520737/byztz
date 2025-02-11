@@ -88,6 +88,7 @@
             });
             try {
                 await redisClient.connect();
+                console.log("Redis连接成功");
             } catch (error) {
                 console.error("Redis连接失败:", error);
                 alert("无法连接到Redis，请检查设置。");
@@ -105,7 +106,12 @@
                 return;
             }
 
-            await connectRedis();
+            await connectRedis(); // 确保连接成功后再进行房间操作
+
+            if (!redisClient) {
+                console.error("Redis客户端未初始化");
+                return;
+            }
 
             const roomKey = `room:${roomName}`;
             const playerKey = `${roomKey}:players`;
@@ -168,6 +174,10 @@
 
             const cards = await redisClient.hGetAll(cardKey);
             const cardKeys = Object.keys(cards);
+            if (cardKeys.length === 0) {
+                console.error("没有可用的卡片");
+                return;
+            }
             const randomIndex = Math.floor(Math.random() * cardKeys.length);
             const cardContent = cards[cardKeys[randomIndex]];
             await redisClient.hSet(playerKey, playerName, JSON.stringify({ name: playerName, card: cardContent }));
