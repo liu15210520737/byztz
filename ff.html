@@ -29,8 +29,8 @@
             margin-bottom: 10px;
         }
     </style>
-</head>
-<body>
+</head<body>
+>
     <div class="container">
         <h1 class="text-center">不要做挑战</h1>
         <div class="card">
@@ -52,7 +52,7 @@
                 <input type="number" id="numCards" class="form-control" value="5" min="1">
             </div>
             <div class="mt-3">
-                <button onclick="joinOrCreateRoom()" class="btn btn-primary">加入/创建房间</button>
+                <button onclick="joinOrCreateRoom()" class="btn btn-primary">加入/创建</房间button>
             </div>
         </div>
 
@@ -65,7 +65,7 @@
                 <h2>聊天室</h2>
                 <div id="chatBox" class="chat-box"></div>
                 <input type="text" id="chatInput" class="form-control" placeholder="输入消息">
-               button < onclick="sendMessage()" class="btn btn-primary mt-2">发送</button>
+                <button onclick="sendMessage()" class="btn btn-primary mt-2">发送</button>
             </div>
             <div class="card">
                 <h2>你的卡片</h2>
@@ -74,21 +74,18 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/redis@4.6.7/dist/redis.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@upstash/redis@4.6.7/dist/redis.min.js"></script>
     <script>
         let redisClient;
-        const upstashUrl = "https://inspired-ox-13540.upstash.io";
-        const upstashToken = "ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA";
+        const upstashUrl = "your-upstash-url";
+        const upstashToken = "your-upstash-token";
 
         async function connectRedis() {
-            const { createClient } = Redis;
+            const { createClient } = UpstashRedis;
             redisClient = createClient({
                 url: upstashUrl,
-                socket: {
-                    tls: true
-                }
+                token: upstashToken
             });
-            redisClient.on("error", (err) => console.error("Redis Error:", err));
             await redisClient.connect();
         }
 
@@ -191,7 +188,7 @@
             const chatBox = document.getElementById("chatBox");
 
             const messages = await redisClient.lRange(chatKey, 0, -1);
-            chatBox.innerHTML = "";
+            chatBox =.innerHTML "";
             messages.forEach((msg) => {
                 const messageData = JSON.parse(msg);
                 const messageElement = document.createElement("div");
