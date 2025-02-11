@@ -77,8 +77,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@upstash/redis@4.6.7/dist/redis.min.js"></script>
     <script>
         let redisClient;
-        const upstashUrl = "https://inspired-ox-13540.upstash.io";
-        const upstashToken = "ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA";
+        const upstashUrl = "your-upstash-url";
+        const upstashToken = "your-upstash-token";
 
         async function connectRedis() {
             const { createClient } = UpstashRedis;
@@ -86,7 +86,12 @@
                 url: upstashUrl,
                 token: upstashToken
             });
-            await redisClient.connect();
+            try {
+                await redisClient.connect();
+            } catch (error) {
+                console.error("Redis连接失败:", error);
+                alert("无法连接到Redis，请检查设置。");
+            }
         }
 
         async function joinOrCreateRoom() {
@@ -108,9 +113,7 @@
 
             // 加入房间或创建房间
             let players = await redisClient.hGetAll(playerKey);
-            if (!players) {
-                players = {};
-            }
+            players = players || {}; // 确保players是一个对象
             players[playerName] = JSON.stringify({ name: playerName, card: null });
             await redisClient.hSet(playerKey, players);
 
@@ -134,8 +137,13 @@
                 "不能说'我'"
             ];
             const cards = {};
+            const usedCards = new Set(); // 用于跟踪已使用的卡片
             for (let i = 0; i < numCards; i++) {
-                const content = cardContents[Math.floor(Math.random() * cardContents.length)];
+                let content;
+                do {
+                    content = cardContents[Math.floor(Math.random() * cardContents.length)];
+                } while (usedCards.has(content)); // 确保不重复
+                usedCards.add(content);
                 cards[`card${i}`] = content;
             }
             return cards;
@@ -159,7 +167,9 @@
             const playerKey = `room:${roomName}:players`;
 
             const cards = await redisClient.hGetAll(cardKey);
-            const cardContent = cards[`card${Math.floor(Math.random() * Object.keys(cards).length)}`];
+            const cardKeys = Object.keys(cards);
+            const randomIndex = Math.floor(Math.random() * cardKeys.length);
+            const cardContent = cards[cardKeys[randomIndex]];
             await redisClient.hSet(playerKey, playerName, JSON.stringify({ name: playerName, card: cardContent }));
 
             const playerCard = document.getElementById("playerCard");
@@ -195,6 +205,7 @@
                 messageElement.textContent = `${messageData.name}: ${messageData.message}`;
                 chatBox.appendChild(messageElement);
             });
+            chatBox.scrollTop = chatBox.scrollHeight; // 滚动到底部
         }
 
         document.getElementById("chatInput").addEventListener("keypress", (e) => {
