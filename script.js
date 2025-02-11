@@ -1,5 +1,5 @@
-const redisUrl = 'YOUR_UPSTASH_REDIS_URL';
-const redisToken = 'YOUR_UPSTASH_REDIS_TOKEN';
+const redisUrl = 'https://inspired-ox-13540.upstash.io';
+const redisToken = 'ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA';
 
 const roomCodeInput = document.getElementById('room-code');
 const joinButton = document.getElementById('join-room');
