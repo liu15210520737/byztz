@@ -29,8 +29,8 @@
             margin-bottom: 10px;
         }
     </style>
-</head<body>
->
+</head>
+<body>
     <div class="container">
         <h1 class="text-center">不要做挑战</h1>
         <div class="card">
@@ -52,7 +52,7 @@
                 <input type="number" id="numCards" class="form-control" value="5" min="1">
             </div>
             <div class="mt-3">
-                <button onclick="joinOrCreateRoom()" class="btn btn-primary">加入/创建</房间button>
+                <button onclick="joinOrCreateRoom()" class="btn btn-primary">加入/创建房间</button>
             </div>
         </div>
 
@@ -77,8 +77,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@upstash/redis@4.6.7/dist/redis.min.js"></script>
     <script>
         let redisClient;
-        const upstashUrl = "https://inspired-ox-13540.upstash.io";
-        const upstashToken = "ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA";
+        const upstashUrl = "your-upstash-url";
+        const upstashToken = "your-upstash-token";
 
         async function connectRedis() {
             const { createClient } = UpstashRedis;
@@ -188,7 +188,7 @@
             const chatBox = document.getElementById("chatBox");
 
             const messages = await redisClient.lRange(chatKey, 0, -1);
-            chatBox =.innerHTML "";
+            chatBox.innerHTML = "";
             messages.forEach((msg) => {
                 const messageData = JSON.parse(msg);
                 const messageElement = document.createElement("div");
