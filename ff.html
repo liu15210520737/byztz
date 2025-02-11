@@ -74,11 +74,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@upstash/redis@4.6.7/dist/redis.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@upstash/redis@4.6.6/dist/redis.min.js"></script> <!-- 使用有效的版本 -->
     <script>
         let redisClient;
-        const upstashUrl = "https://inspired-ox-13540.upstash.io";
-        const upstashToken = "ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA";
+        const upstashUrl = "https://inspired-ox-13540.upstash.io"; // 替换为你的Upstash URL
+        const upstashToken = "ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA"; // 替换为你的Upstash Token
 
         async function connectRedis() {
             const { createClient } = UpstashRedis;
