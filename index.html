@@ -1,3 +1,89 @@
-<input id="roomId" placeholder="输入房间号">
-<button onclick="createRoom()">创建房间</button>
-<button onclick="joinRoom()">加入房间</button>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不要做挑战</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        #roomInput, #playerInput {
+            margin: 10px;
+        }
+        #chat {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+        }
+        #messages {
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>不要做挑战</h1>
+    <input id="roomInput" type="text" placeholder="输入房间号">
+    <input id="playerInput" type="text" placeholder="输入你的名字">
+    <button onclick="joinRoom()">加入房间</button>
+    <div id="chat">
+        <ul id="messages"></ul>
+    </div>
+    <input id="messageInput" type="text" placeholder="输入消息">
+    <button onclick="sendMessage()">发送消息</button>
+
+    <script>
+        const redisUrl = 'YOUR_UPSTASH_REDIS_URL'; // 替换为你的Upstash Redis URL
+        const redisToken = 'YOUR_UPSTASH_REDIS_TOKEN'; // 替换为你的Upstash Redis Token
+        let roomId = '';
+        let playerName = '';
+
+        async function joinRoom() {
+            roomId = document.getElementById('roomInput').value;
+            playerName = document.getElementById('playerInput').value;
+            if (!roomId || !playerName) {
+                alert('请填写房间号和名字');
+                return;
+            }
+            loadMessages();
+        }
+
+        async function loadMessages() {
+            const response = await axios.get(redisUrl + '/lrange/messages:' + roomId + '/0/-1', {
+                headers: {
+                    'Authorization': 'Bearer ' + redisToken
+                }
+            });
+            const messages = response.data;
+            const messagesList = document.getElementById('messages');
+            messagesList.innerHTML = '';
+            messages.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                messagesList.appendChild(li);
+            });
+        }
+
+        async function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+            if (!message) return;
+            const fullMessage = `${playerName}: ${message}`;
+            await axios.post(redisUrl + '/rpush/messages:' + roomId, [fullMessage], {
+                headers: {
+                    'Authorization': 'Bearer ' + redisToken
+                }
+            });
+            document.getElementById('messageInput').value = '';
+            loadMessages();
+        }
+
+        setInterval(loadMessages, 2000); // 每2秒刷新消息
+    </script>
+</body>
+</html>
