@@ -2,8 +2,8 @@
 // 使用 Upstash REST API 形式封装 Redis 命令调用
 // 请将下面的 REDIS_REST_URL 与 REDIS_TOKEN 替换为你在 Upstash 控制台中获取的 REST API 端点与令牌
 
-const REDIS_REST_URL = 'https://YOUR_UPSTASH_REDIS_REST_URL';
-const REDIS_TOKEN = 'YOUR_UPSTASH_REDIS_REST_TOKEN';
+const REDIS_REST_URL = 'https://inspired-ox-13540.upstash.io';
+const REDIS_TOKEN = 'ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA';
 
 /**
  * 通用请求函数
