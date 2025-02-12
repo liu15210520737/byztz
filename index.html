@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>不要做挑战 - 网页游戏</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container py-4">
+    <h1 class="text-center mb-4">不要做挑战</h1>
+    <!-- 大厅视图 -->
+    <div id="lobby-view">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h3 class="card-title">加入/创建房间</h3>
+          <form id="room-form">
+            <div class="mb-3">
+              <label for="room-id" class="form-label">房间号</label>
+              <input type="text" class="form-control" id="room-id" placeholder="输入房间号（留空则随机生成）">
+            </div>
+            <div class="mb-3">
+              <label for="player-name" class="form-label">你的名称</label>
+              <input type="text" class="form-control" id="player-name" placeholder="输入你的名称">
+            </div>
+            <div class="mb-3">
+              <label for="max-players" class="form-label">最大人数</label>
+              <input type="number" class="form-control" id="max-players" value="4" min="2">
+            </div>
+            <div class="mb-3">
+              <label for="card-count" class="form-label">牌数</label>
+              <input type="number" class="form-control" id="card-count" value="10" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="card-content" class="form-label">自定义牌内容（用英文分号分隔）</label>
+              <textarea class="form-control" id="card-content" rows="2" placeholder="例如: 不许说话;不许笑"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">创建/加入房间</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- 房间视图 -->
+    <div id="room-view" class="d-none">
+      <div class="mb-3">
+        <h3>房间号: <span id="display-room-id"></span></h3>
+        <p>你的名称: <span id="display-player-name"></span></p>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h4 class="card-title">玩家列表</h4>
+              <ul id="players-list" class="list-group">
+                <!-- 玩家列表 -->
+              </ul>
+            </div>
+          </div>
+          <button id="deal-cards-btn" class="btn btn-success w-100 mb-3">随机发牌</button>
+          <button id="report-btn" class="btn btn-danger w-100">报告违规</button>
+        </div>
+        <div class="col-md-8">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h4 class="card-title">你的挑战牌</h4>
+              <p id="my-card" class="fs-4 text-center">等待发牌...</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">聊天</h4>
+              <div id="chat-box" class="mb-3" style="height:200px; overflow-y: auto; border:1px solid #ddd; padding: 5px;"></div>
+              <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="输入消息">
+                <button id="send-chat-btn" class="btn btn-primary">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App JS -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
