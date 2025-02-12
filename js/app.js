@@ -1,5 +1,13 @@
 // js/app.js
-import { redisCommand } from './redis.js';
+import { 
+  redisSet, 
+  redisGet, 
+  redisDel, 
+  redisRPush, 
+  redisLRange, 
+  redisHSet, 
+  redisHGet 
+} from './redis.js';
 
 let currentRoom = null;
 let currentUser = null;
@@ -23,34 +31,34 @@ function showRoomView() {
 
 // 将房间配置存入 Redis，键名为 room:<房间号>:config
 async function createRoom(roomId, config) {
-  await redisCommand('SET', [`room:${roomId}:config`, JSON.stringify(config)]);
+  await redisSet(`room:${roomId}:config`, JSON.stringify(config));
   // 初始化玩家列表、聊天记录和牌分配信息
-  await redisCommand('DEL', [`room:${roomId}:players`]);
-  await redisCommand('DEL', [`room:${roomId}:chat`]);
-  await redisCommand('DEL', [`room:${roomId}:cardsAssigned`]);
+  await redisDel(`room:${roomId}:players`);
+  await redisDel(`room:${roomId}:chat`);
+  await redisDel(`room:${roomId}:cardsAssigned`);
 }
 
 // 加入房间：将玩家名称追加到 room:<房间号>:players 列表中
 async function joinRoom(roomId, playerName) {
-  await redisCommand('RPUSH', [`room:${roomId}:players`, playerName]);
+  await redisRPush(`room:${roomId}:players`, playerName);
 }
 
 // 获取房间中的玩家列表
 async function fetchPlayers(roomId) {
-  const result = await redisCommand('LRANGE', [`room:${roomId}:players`, '0', '-1']);
-  return result.result;
+  const response = await redisLRange(`room:${roomId}:players`, 0, -1);
+  return response.result; // 假设返回格式为 { result: [...] }
 }
 
 // 发送聊天消息，存入 room:<房间号>:chat 列表
 async function sendChat(roomId, message) {
   const chatMsg = JSON.stringify({ user: currentUser, message: message, time: Date.now() });
-  await redisCommand('RPUSH', [`room:${roomId}:chat`, chatMsg]);
+  await redisRPush(`room:${roomId}:chat`, chatMsg);
 }
 
 // 获取聊天记录
 async function fetchChat(roomId) {
-  const result = await redisCommand('LRANGE', [`room:${roomId}:chat`, '0', '-1']);
-  return result.result;
+  const response = await redisLRange(`room:${roomId}:chat`, 0, -1);
+  return response.result;
 }
 
 // 随机发牌：从自定义的牌组中随机为每个玩家分配一张牌
@@ -63,19 +71,28 @@ async function dealCards(roomId) {
       cardList.push(`挑战 ${i}`);
     }
   }
-  // 随机打乱牌组
-  let shuffled = cardList.sort(() => 0.5 - Math.random());
+  // 使用 Fisher–Yates 算法洗牌（复制一份牌组，防止直接修改原数组）
+  let shuffled = shuffleArray([...cardList]);
   // 为每个玩家分配一张牌
   for (let i = 0; i < players.length; i++) {
     let card = shuffled[i % shuffled.length];
-    await redisCommand('HSET', [`room:${roomId}:cardsAssigned`, players[i], card]);
+    await redisHSet(`room:${roomId}:cardsAssigned`, players[i], card);
   }
 }
 
 // 获取当前玩家的牌
 async function fetchMyCard(roomId, playerName) {
-  const result = await redisCommand('HGET', [`room:${roomId}:cardsAssigned`, playerName]);
-  return result.result;
+  const response = await redisHGet(`room:${roomId}:cardsAssigned`, playerName);
+  return response.result;
+}
+
+// 工具函数：Fisher–Yates 洗牌算法
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 // 更新玩家列表 UI
