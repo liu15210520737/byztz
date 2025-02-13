@@ -1,156 +1,275 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>在线不要做挑战</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .room-section, .game-section { margin-bottom: 30px; }
-        .player-list { display: flex; gap: 20px; flex-wrap: wrap; }
-        .player-card { border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 150px; }
-        .online { background-color: #cfc; }
-        .out { background-color: #fcc; }
-        #messages { height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
-        .hidden { display: none; }
-    </style>
-    <!-- 引入Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <meta charset="UTF-8">
+  <title>不要做挑战 - 多人在线版</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    #lobby, #gameArea {
+      width: 100%;
+      max-width: 600px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    #gameArea {
+      display: none;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+    }
+    #challengeCard {
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    #timer {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #d9534f;
+    }
+    #playersList {
+      text-align: left;
+      margin-top: 20px;
+    }
+    .player {
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+    #nextRoundBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      display: none;
+    }
+  </style>
+  <!-- 引入 Firebase SDK（兼容版） -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <!-- 房间操作界面 -->
-    <div class="room-section">
-        <h2>创建或加入房间</h2>
-        <button onclick="createRoom()">创建新房间</button>
-        <div style="margin: 20px 0">或</div>
-        <input type="text" id="roomId" placeholder="输入房间号">
-        <input type="text" id="playerName" placeholder="你的名字">
-        <button onclick="joinRoom()">加入房间</button>
-    </div>
+  <!-- 大厅页面：玩家输入昵称 -->
+  <div id="lobby">
+    <h2>欢迎进入“不要做挑战”游戏</h2>
+    <input type="text" id="nickname" placeholder="请输入昵称">
+    <br>
+    <button id="joinBtn">加入游戏</button>
+  </div>
 
-    <!-- 游戏界面 -->
-    <div class="game-section hidden">
-        <h2>房间号: <span id="currentRoom"></span></h2>
-        <div class="player-list" id="players"></div>
-        
-        <div style="margin: 20px 0">
-            <h3>你的禁止动作: <span id="myAction"></span></h3>
-        </div>
+  <!-- 游戏页面 -->
+  <div id="gameArea">
+    <h2>挑战开始！</h2>
+    <div id="challengeCard">挑战卡片</div>
+    <div id="timer">倒计时：</div>
+    <div id="playersList"><h3>玩家状态：</h3></div>
+    <button id="nextRoundBtn">开始下一轮</button>
+  </div>
 
-        <div id="messages"></div>
-        
-        <div style="margin-top: 20px">
-            <input type="text" id="messageInput" placeholder="输入你的动作">
-            <button onclick="sendAction()">发送</button>
-        </div>
-    </div>
+  <script>
+    // ================================
+    // Firebase 初始化（请替换为你自己的配置）
+    // ================================
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    <script>
-        // Firebase配置
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-        const firebaseConfig = {
-          apiKey: "AIzaSyAEsQAmDVHZBuf5TMKJ7xEaGxiERU4ScbE",
-          authDomain: "byztz-6767a.firebaseapp.com",
-          projectId: "byztz-6767a",
-          storageBucket: "byztz-6767a.firebasestorage.app",
-          messagingSenderId: "723937369944",
-          appId: "1:723937369944:web:67fc4c9717277e47038f2d",
-          measurementId: "G-M07DEYP2MN"
-        };
-        
-        // 初始化Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    // ================================
+    // 全局变量
+    // ================================
+    let playerId = null;
+    let nickname = "";
+    const roomId = "demo_room"; // 固定房间ID（演示用，可扩展为自动匹配房间）
+    let timerInterval = null;
+    let currentChallenge = null;
+    const roundTime = 10; // 每轮时间（秒）
 
-        let currentRoomId = null;
-        let playerId = null;
-        const actions = ["笑", "摸鼻子", "站起来", "说英文", "眨眼", "摸头发"];
+    // 挑战卡预设数组（可根据需要扩充）
+    const challenges = [
+      { id: 1, text: "不要笑！" },
+      { id: 2, text: "不要动！" },
+      { id: 3, text: "不要说话！" },
+      { id: 4, text: "不要眨眼！" },
+      { id: 5, text: "不要抬手！" }
+    ];
 
-        // 创建房间
-        function createRoom() {
-            currentRoomId = Math.random().toString(36).substr(2, 6).toUpperCase();
-            document.getElementById('currentRoom').textContent = currentRoomId;
-            joinRoom();
+    // ================================
+    // 获取页面元素
+    // ================================
+    const lobbyEl = document.getElementById('lobby');
+    const gameAreaEl = document.getElementById('gameArea');
+    const joinBtn = document.getElementById('joinBtn');
+    const nicknameInput = document.getElementById('nickname');
+    const challengeCardEl = document.getElementById('challengeCard');
+    const timerEl = document.getElementById('timer');
+    const playersListEl = document.getElementById('playersList');
+    const nextRoundBtn = document.getElementById('nextRoundBtn');
+
+    // ================================
+    // 玩家加入游戏
+    // ================================
+    joinBtn.addEventListener('click', () => {
+      nickname = nicknameInput.value.trim();
+      if (!nickname) {
+        alert("请输入昵称！");
+        return;
+      }
+      // 生成一个简单的玩家ID
+      playerId = "player_" + Date.now();
+      // 将玩家信息写入房间节点
+      const playerRef = db.ref("rooms/" + roomId + "/players/" + playerId);
+      playerRef.set({
+        nickname: nickname,
+        status: "ready",  // ready/playing/failed/finished
+        score: 0
+      });
+      // 监听房间内玩家数据变化
+      listenPlayers();
+      // 切换页面显示游戏区
+      lobbyEl.style.display = "none";
+      gameAreaEl.style.display = "block";
+      // 确保房间节点存在（如果不存在则创建）
+      db.ref("rooms/" + roomId).once('value', snapshot => {
+        if (!snapshot.exists()) {
+          db.ref("rooms/" + roomId).set({ currentChallenge: {} });
         }
+      });
+      // 开始第一轮（延迟几秒让所有玩家加入，演示用）
+      setTimeout(startRound, 2000);
+    });
 
-        // 加入房间
-        async function joinRoom() {
-            const roomId = currentRoomId || document.getElementById('roomId').value;
-            const playerName = document.getElementById('playerName').value || "匿名玩家";
-            
-            if (!roomId) return alert("请输入房间号");
-            
-            currentRoomId = roomId;
-            playerId = Math.random().toString(36).substr(2, 9);
-            
-            // 加入玩家到房间
-            const playerRef = database.ref(`rooms/${roomId}/players/${playerId}`);
-            await playerRef.set({
-                name: playerName,
-                action: actions[Math.floor(Math.random() * actions.length)],
-                status: 'online'
-            });
+    // ================================
+    // 监听房间内玩家状态变化
+    // ================================
+    function listenPlayers() {
+      db.ref("rooms/" + roomId + "/players").on('value', snapshot => {
+        const players = snapshot.val();
+        updatePlayersList(players);
+      });
+    }
 
-            // 显示游戏界面
-            document.querySelector('.room-section').classList.add('hidden');
-            document.querySelector('.game-section').classList.remove('hidden');
-            document.getElementById('currentRoom').textContent = roomId;
-            document.getElementById('myAction').textContent = (await playerRef.get()).val().action;
+    function updatePlayersList(players) {
+      let html = "<h3>玩家状态：</h3>";
+      for (let key in players) {
+        let p = players[key];
+        html += `<div class="player">${p.nickname} - ${p.status} - 得分：${p.score}</div>`;
+      }
+      playersListEl.innerHTML = html;
+    }
 
-            // 监听玩家列表变化
-            database.ref(`rooms/${roomId}/players`).on('value', snapshot => {
-                updatePlayerList(snapshot.val());
-            });
-
-            // 监听消息
-            database.ref(`rooms/${roomId}/messages`).on('child_added', snapshot => {
-                addMessage(snapshot.val());
-            });
+    // ================================
+    // 开始一轮游戏：选择挑战卡、启动倒计时、监听违规操作
+    // ================================
+    function startRound() {
+      nextRoundBtn.style.display = "none";  // 隐藏下一轮按钮
+      // 随机选择一张挑战卡
+      currentChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+      challengeCardEl.innerText = currentChallenge.text;
+      // 将当前挑战卡写入房间（便于所有玩家同步显示）
+      db.ref("rooms/" + roomId + "/currentChallenge").set(currentChallenge);
+      // 重置所有玩家状态为“playing”
+      db.ref("rooms/" + roomId + "/players").once('value', snapshot => {
+        const players = snapshot.val();
+        for (let key in players) {
+          db.ref("rooms/" + roomId + "/players/" + key).update({ status: "playing" });
         }
-
-        // 更新玩家列表
-        function updatePlayerList(players) {
-            const container = document.getElementById('players');
-            container.innerHTML = '';
-            
-            for (const [id, player] of Object.entries(players)) {
-                const div = document.createElement('div');
-                div.className = `player-card ${player.status}`;
-                div.innerHTML = `
-                    <h4>${player.name}</h4>
-                    <p>状态: ${player.status === 'online' ? '游戏中' : '已出局'}</p>
-                `;
-                container.appendChild(div);
-            }
+      });
+      // 启动倒计时
+      let timeLeft = roundTime;
+      timerEl.innerText = "倒计时：" + timeLeft + "s";
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerEl.innerText = "倒计时：" + timeLeft + "s";
+        if(timeLeft <= 0) {
+          clearInterval(timerInterval);
+          endRound();
         }
+      }, 1000);
+      // 添加违规操作监听（此处以点击和按键为示例）
+      document.body.addEventListener('click', forbiddenAction);
+      document.body.addEventListener('keydown', forbiddenAction);
+    }
 
-        // 发送动作
-        function sendAction() {
-            const message = document.getElementById('messageInput').value;
-            database.ref(`rooms/${currentRoomId}/messages`).push().set({
-                sender: playerId,
-                text: message,
-                timestamp: Date.now()
-            });
-            
-            // 验证是否触发其他玩家的禁止动作
-            database.ref(`rooms/${currentRoomId}/players`).once('value').then(snapshot => {
-                snapshot.forEach(child => {
-                    const player = child.val();
-                    if (player.status === 'online' && message.includes(player.action)) {
-                        database.ref(child.ref).update({ status: 'out' });
-                    }
-                });
-            });
-            
-            document.getElementById('messageInput').value = '';
+    // ================================
+    // 违规操作检测（例如点击或按键触发违规）
+    // ================================
+    function forbiddenAction() {
+      // 仅在玩家状态为 playing 时更新为 failed
+      db.ref("rooms/" + roomId + "/players/" + playerId).once('value', snapshot => {
+        const p = snapshot.val();
+        if(p && p.status === "playing") {
+          db.ref("rooms/" + roomId + "/players/" + playerId).update({ status: "failed" });
+          alert("你违反了挑战规则！");
         }
+      });
+      // 移除监听，防止重复触发
+      document.body.removeEventListener('click', forbiddenAction);
+      document.body.removeEventListener('keydown', forbiddenAction);
+    }
 
-        // 添加消息
-        function addMessage(message) {
-            const div = document.createElement('div');
-            div.textContent = message.text;
-            document.getElementById('messages').appendChild(div);
+    // ================================
+    // 回合结束：结算得分并显示下一轮按钮
+    // ================================
+    function endRound() {
+      // 移除违规操作监听
+      document.body.removeEventListener('click', forbiddenAction);
+      document.body.removeEventListener('keydown', forbiddenAction);
+      // 结算：未违规（状态仍为 playing）的玩家得分加 1，并更新状态为 finished
+      db.ref("rooms/" + roomId + "/players").once('value', snapshot => {
+        const players = snapshot.val();
+        for (let key in players) {
+          let p = players[key];
+          if (p.status === "playing") {
+            let newScore = (p.score || 0) + 1;
+            db.ref("rooms/" + roomId + "/players/" + key).update({ score: newScore, status: "finished" });
+          } else {
+            db.ref("rooms/" + roomId + "/players/" + key).update({ status: "finished" });
+          }
         }
-    </script>
+      });
+      // 显示下一轮按钮，等待玩家点击开始下一回合
+      setTimeout(() => {
+        nextRoundBtn.style.display = "block";
+      }, 2000);
+    }
+
+    // ================================
+    // 下一轮按钮事件
+    // ================================
+    nextRoundBtn.addEventListener('click', () => {
+      // 判断房间中是否还有超过 1 名未失败的玩家（演示简单处理）
+      db.ref("rooms/" + roomId + "/players").once('value', snapshot => {
+        const players = snapshot.val();
+        let activeCount = 0;
+        for (let key in players) {
+          if (players[key].status !== "failed") {
+            activeCount++;
+          }
+        }
+        if(activeCount <= 1) {
+          alert("游戏结束！");
+          nextRoundBtn.style.display = "none";
+        } else {
+          startRound();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
