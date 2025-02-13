@@ -1,119 +1,155 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>不要做挑战 - 小潮team</title>
-  <style>
-    /* 基础样式 */
-    body {
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      background-color: #f4f4f4;
-      color: #333;
-    }
-    header {
-      background-color: #FF5722;
-      color: #fff;
-      padding: 20px 0;
-      text-align: center;
-    }
-    nav {
-      background: #333;
-      color: #fff;
-      padding: 10px;
-      text-align: center;
-    }
-    nav a {
-      color: #fff;
-      margin: 0 10px;
-      text-decoration: none;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    section {
-      margin-bottom: 30px;
-    }
-    h1, h2 {
-      margin-bottom: 10px;
-    }
-    p {
-      margin-bottom: 15px;
-      text-align: justify;
-    }
-    .video {
-      text-align: center;
-      margin: 20px 0;
-    }
-    .video a {
-      color: #FF5722;
-      font-weight: bold;
-      text-decoration: none;
-      border: 2px solid #FF5722;
-      padding: 10px 20px;
-      border-radius: 5px;
-      transition: background-color 0.3s;
-    }
-    .video a:hover {
-      background-color: #FF5722;
-      color: #fff;
-    }
-    footer {
-      background: #333;
-      color: #fff;
-      text-align: center;
-      padding: 10px;
-      margin-top: 20px;
-      font-size: 0.9em;
-    }
-  </style>
+    <title>在线不要做挑战</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .room-section, .game-section { margin-bottom: 30px; }
+        .player-list { display: flex; gap: 20px; flex-wrap: wrap; }
+        .player-card { border: 1px solid #ccc; padding: 10px; border-radius: 5px; min-width: 150px; }
+        .online { background-color: #cfc; }
+        .out { background-color: #fcc; }
+        #messages { height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        .hidden { display: none; }
+    </style>
+    <!-- 引入Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-  <header>
-    <h1>不要做挑战</h1>
-    <p>—— 小潮team 独特的创意与幽默</p>
-  </header>
-  <nav>
-    <a href="#about">关于</a>
-    <a href="#video">视频展示</a>
-    <a href="#comments">评论互动</a>
-  </nav>
-  <div class="container">
-    <section id="about">
-      <h2>关于“不要做挑战”</h2>
-      <p>
-        “不要做挑战”是知名bilibili UP主小潮team的一大特色内容，他通过幽默、夸张的表现手法，向大家展示各种看似刺激但可能暗藏风险的网络挑战。在当下挑战盛行的背景下，小潮team用自己的风格提醒观众：挑战不一定带来快乐，有时反而会带来麻烦。
-      </p>
-      <p>
-        这一主题不仅反映了对某些极端行为的讽刺，也传递出理性对待网络潮流、追求安全与健康生活的理念。无论你是追求刺激的观众，还是理性思考者，都能从中获得别样的启发。
-      </p>
-    </section>
-    
-    <section id="video">
-      <h2>视频展示</h2>
-      <p>
-        快来观看小潮team的“不要做挑战”系列视频，感受他独特的幽默风格与犀利见解：
-      </p>
-      <div class="video">
-        <a href="https://www.bilibili.com/video/BV1e54y1Q7vK/" target="_blank">点击观看《不要做挑战？》</a>
-      </div>
-    </section>
-    
-    <section id="comments">
-      <h2>评论互动</h2>
-      <p>
-        你对小潮team的“不要做挑战”怎么看？欢迎在下方留言，与大家分享你对各种网络挑战的看法与体验。让我们一起探讨如何在追求乐趣的同时保持理智，远离盲目跟风！
-      </p>
-    </section>
-  </div>
-  <footer>
-    <p>&copy; 2025 小潮team 粉丝社区. All Rights Reserved.</p>
-  </footer>
+    <!-- 房间操作界面 -->
+    <div class="room-section">
+        <h2>创建或加入房间</h2>
+        <button onclick="createRoom()">创建新房间</button>
+        <div style="margin: 20px 0">或</div>
+        <input type="text" id="roomId" placeholder="输入房间号">
+        <input type="text" id="playerName" placeholder="你的名字">
+        <button onclick="joinRoom()">加入房间</button>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div class="game-section hidden">
+        <h2>房间号: <span id="currentRoom"></span></h2>
+        <div class="player-list" id="players"></div>
+        
+        <div style="margin: 20px 0">
+            <h3>你的禁止动作: <span id="myAction"></span></h3>
+        </div>
+
+        <div id="messages"></div>
+        
+        <div style="margin-top: 20px">
+            <input type="text" id="messageInput" placeholder="输入你的动作">
+            <button onclick="sendAction()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase配置
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // 初始化Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentRoomId = null;
+        let playerId = null;
+        const actions = ["笑", "摸鼻子", "站起来", "说英文", "眨眼", "摸头发"];
+
+        // 创建房间
+        function createRoom() {
+            currentRoomId = Math.random().toString(36).substr(2, 6).toUpperCase();
+            document.getElementById('currentRoom').textContent = currentRoomId;
+            joinRoom();
+        }
+
+        // 加入房间
+        async function joinRoom() {
+            const roomId = currentRoomId || document.getElementById('roomId').value;
+            const playerName = document.getElementById('playerName').value || "匿名玩家";
+            
+            if (!roomId) return alert("请输入房间号");
+            
+            currentRoomId = roomId;
+            playerId = Math.random().toString(36).substr(2, 9);
+            
+            // 加入玩家到房间
+            const playerRef = database.ref(`rooms/${roomId}/players/${playerId}`);
+            await playerRef.set({
+                name: playerName,
+                action: actions[Math.floor(Math.random() * actions.length)],
+                status: 'online'
+            });
+
+            // 显示游戏界面
+            document.querySelector('.room-section').classList.add('hidden');
+            document.querySelector('.game-section').classList.remove('hidden');
+            document.getElementById('currentRoom').textContent = roomId;
+            document.getElementById('myAction').textContent = (await playerRef.get()).val().action;
+
+            // 监听玩家列表变化
+            database.ref(`rooms/${roomId}/players`).on('value', snapshot => {
+                updatePlayerList(snapshot.val());
+            });
+
+            // 监听消息
+            database.ref(`rooms/${roomId}/messages`).on('child_added', snapshot => {
+                addMessage(snapshot.val());
+            });
+        }
+
+        // 更新玩家列表
+        function updatePlayerList(players) {
+            const container = document.getElementById('players');
+            container.innerHTML = '';
+            
+            for (const [id, player] of Object.entries(players)) {
+                const div = document.createElement('div');
+                div.className = `player-card ${player.status}`;
+                div.innerHTML = `
+                    <h4>${player.name}</h4>
+                    <p>状态: ${player.status === 'online' ? '游戏中' : '已出局'}</p>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // 发送动作
+        function sendAction() {
+            const message = document.getElementById('messageInput').value;
+            database.ref(`rooms/${currentRoomId}/messages`).push().set({
+                sender: playerId,
+                text: message,
+                timestamp: Date.now()
+            });
+            
+            // 验证是否触发其他玩家的禁止动作
+            database.ref(`rooms/${currentRoomId}/players`).once('value').then(snapshot => {
+                snapshot.forEach(child => {
+                    const player = child.val();
+                    if (player.status === 'online' && message.includes(player.action)) {
+                        database.ref(child.ref).update({ status: 'out' });
+                    }
+                });
+            });
+            
+            document.getElementById('messageInput').value = '';
+        }
+
+        // 添加消息
+        function addMessage(message) {
+            const div = document.createElement('div');
+            div.textContent = message.text;
+            document.getElementById('messages').appendChild(div);
+        }
+    </script>
 </body>
 </html>
