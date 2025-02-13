@@ -1,230 +1,301 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>不要做挑战</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 800px;
-            margin-top: 20px;
-        }
-        .card {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .chat-box {
-            height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>不要做挑战 - 网页游戏</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    #chat-box {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 5px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center">不要做挑战</h1>
-        <div class="card">
-            <h2>房间信息</h2>
-            <div>
-                <label for="roomName">房间号：</label>
-                <input type="text" id="roomName" class="form-control" placeholder="输入房间号或创建房间">
+  <div class="container py-4">
+    <h1 class="text-center mb-4">不要做挑战</h1>
+    <!-- 大厅视图 -->
+    <div id="lobby-view">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h3 class="card-title">加入/创建房间</h3>
+          <form id="room-form">
+            <div class="mb-3">
+              <label for="room-id" class="form-label">房间号</label>
+              <input type="text" class="form-control" id="room-id" placeholder="输入房间号（留空则随机生成）">
             </div>
-            <div class="mt-3">
-                <label for="playerName">玩家名称：</label>
-                <input type="text" id="playerName" class="form-control" placeholder="输入你的名字">
+            <div class="mb-3">
+              <label for="player-name" class="form-label">你的名称</label>
+              <input type="text" class="form-control" id="player-name" placeholder="输入你的名称">
             </div>
-            <div class="mt-3">
-                <label for="numPlayers">房间人数：</label>
-                <input type="number" id="numPlayers" class="form-control" value="4" min="2">
+            <div class="mb-3">
+              <label for="max-players" class="form-label">最大人数</label>
+              <input type="number" class="form-control" id="max-players" value="4" min="2">
             </div>
-            <div class="mt-3">
-                <label for="numCards">牌数：</label>
-                <input type="number" id="numCards" class="form-control" value="5" min="1">
+            <div class="mb-3">
+              <label for="card-count" class="form-label">牌数</label>
+              <input type="number" class="form-control" id="card-count" value="10" min="1">
             </div>
-            <div class="mt-3">
-                <button onclick="joinOrCreateRoom()" class="btn btn-primary">加入/创建房间</button>
+            <div class="mb-3">
+              <label for="card-content" class="form-label">自定义牌内容（用英文分号分隔）</label>
+              <textarea class="form-control" id="card-content" rows="2" placeholder="例如: 不许说话;不许笑"></textarea>
             </div>
+            <button type="submit" class="btn btn-primary">创建/加入房间</button>
+          </form>
         </div>
-
-        <div id="gameArea" style="display:none;">
-            <div class="card">
-                <h2>玩家列表</h2>
-                <ul id="playerList" class="list-group"></ul>
-            </div>
-            <div class="card">
-                <h2>聊天室</h2>
-                <div id="chatBox" class="chat-box"></div>
-                <input type="text" id="chatInput" class="form-control" placeholder="输入消息">
-                <button onclick="sendMessage()" class="btn btn-primary mt-2">发送</button>
-            </div>
-            <div class="card">
-                <h2>你的卡片</h2>
-                <div id="playerCard" class="alert alert-warning"></div>
-            </div>
-        </div>
+      </div>
     </div>
+    <!-- 房间视图 -->
+    <div id="room-view" class="d-none">
+      <div class="mb-3">
+        <h3>房间号: <span id="display-room-id"></span></h3>
+        <p>你的名称: <span id="display-player-name"></span></p>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h4 class="card-title">玩家列表</h4>
+              <ul id="players-list" class="list-group">
+                <!-- 玩家列表 -->
+              </ul>
+            </div>
+          </div>
+          <button id="deal-cards-btn" class="btn btn-success w-100 mb-3">随机发牌</button>
+          <button id="report-btn" class="btn btn-danger w-100">报告违规</button>
+        </div>
+        <div class="col-md-8">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h4 class="card-title">你的挑战牌</h4>
+              <p id="my-card" class="fs-4 text-center">等待发牌...</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">聊天</h4>
+              <div id="chat-box" class="mb-3"></div>
+              <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="输入消息">
+                <button id="send-chat-btn" class="btn btn-primary">发送</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script src="https://fastly.jsdelivr.net/npm/@upstash/redis@1.34.4"></script> <!-- 更新为指定的版本 -->
-    <script>
-        let redisClient;
-        const upstashUrl = "https://inspired-ox-13540.upstash.io"; // 替换为你的Upstash URL
-        const upstashToken = "ATTkAAIjcDFiMzcwNDZmNjZkZGE0NTA1OTRlZTgyODgxYTcyNzdlZnAxMA"; // 替换为你的Upstash Token
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App JS -->
+  <script>
+    // Upstash Redis 配置
+    const REDIS_ENDPOINT = 'https://YOUR_UPSTASH_REDIS_ENDPOINT'; // 替换为你的 Upstash Redis 端点
+    const REDIS_TOKEN = 'YOUR_UPSTASH_REDIS_TOKEN'; // 替换为你的 Upstash Redis 令牌
 
-        async function connectRedis() {
-            const { createClient } = UpstashRedis;
-            redisClient = createClient({
-                url: upstashUrl,
-                token: upstashToken
-            });
-            try {
-                await redisClient.connect();
-                console.log("Redis连接成功");
-            } catch (error) {
-                console.error("Redis连接失败:", error);
-                alert("无法连接到Redis，请检查设置。");
-            }
+    let currentRoom = null;
+    let currentUser = null;
+    let maxPlayers = 4;
+    let cardCount = 10;
+    let cardList = [];
+    let pollingInterval = null;
+
+    // 工具函数：生成随机房间号
+    function generateRoomId() {
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+
+    // 显示房间视图
+    function showRoomView() {
+      document.getElementById('lobby-view').classList.add('d-none');
+      document.getElementById('room-view').classList.remove('d-none');
+      document.getElementById('display-room-id').textContent = currentRoom;
+      document.getElementById('display-player-name').textContent = currentUser;
+    }
+
+    // 发送 Redis 命令
+    async function redisCommand(command, args = []) {
+      const body = {
+        command: command,
+        args: args
+      };
+      const response = await fetch(REDIS_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${REDIS_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      return await response.json();
+    }
+
+    // 创建房间
+    async function createRoom(roomId, config) {
+      await redisCommand('SET', [`room:${roomId}:config`, JSON.stringify(config)]);
+      await redisCommand('DEL', [`room:${roomId}:players`]);
+      await redisCommand('DEL', [`room:${roomId}:chat`]);
+      await redisCommand('DEL', [`room:${roomId}:cardsAssigned`]);
+    }
+
+    // 加入房间
+    async function joinRoom(roomId, playerName) {
+      await redisCommand('RPUSH', [`room:${roomId}:players`, playerName]);
+    }
+
+    // 获取玩家列表
+    async function fetchPlayers(roomId) {
+      const result = await redisCommand('LRANGE', [`room:${roomId}:players`, '0', '-1']);
+      return result.result;
+    }
+
+    // 发送聊天消息
+    async function sendChat(roomId, message) {
+      const chatMsg = JSON.stringify({ user: currentUser, message: message, time: Date.now() });
+      await redisCommand('RPUSH', [`room:${roomId}:chat`, chatMsg]);
+    }
+
+    // 获取聊天记录
+    async function fetchChat(roomId) {
+      const result = await redisCommand('LRANGE', [`room:${roomId}:chat`, '0', '-1']);
+      return result.result;
+    }
+
+    // 随机发牌
+    async function dealCards(roomId) {
+      const players = await fetchPlayers(roomId);
+      if (!players || players.length === 0) return;
+      if (cardList.length === 0) {
+        for (let i = 1; i <= cardCount; i++) {
+          cardList.push(`挑战 ${i}`);
         }
+      }
+      let shuffled = cardList.sort(() => 0.5 - Math.random());
+      for (let i = 0; i < players.length; i++) {
+        let card = shuffled[i % shuffled.length];
+        await redisCommand('HSET', [`room:${roomId}:cardsAssigned`, players[i], card]);
+      }
+    }
 
-        async function joinOrCreateRoom() {
-            const roomName = document.getElementById("roomName").value;
-            const playerName = document.getElementById("playerName").value;
-            const numPlayers = parseInt(document.getElementById("numPlayers").value);
-            const numCards = parseInt(document.getElementById("numCards").value);
+    // 获取当前玩家的牌
+    async function fetchMyCard(roomId, playerName) {
+      const result = await redisCommand('HGET', [`room:${roomId}:cardsAssigned`, playerName]);
+      return result.result;
+    }
 
-            if (!roomName || !playerName || isNaN(numPlayers) || isNaN(numCards)) {
-                alert("请输入完整信息！");
-                return;
-            }
-
-            await connectRedis(); // 确保连接成功后再进行房间操作
-
-            if (!redisClient) {
-                console.error("Redis客户端未初始化");
-                return;
-            }
-
-            const roomKey = `room:${roomName}`;
-            const playerKey = `${roomKey}:players`;
-            const cardKey = `${roomKey}:cards`;
-
-            // 加入房间或创建房间
-            let players = await redisClient.hGetAll(playerKey);
-            players = players || {}; // 确保players是一个对象
-            players[playerName] = JSON.stringify({ name: playerName, card: null });
-            await redisClient.hSet(playerKey, players);
-
-            // 初始化卡片
-            const cards = generateCards(numCards);
-            await redisClient.hSet(cardKey, cards);
-
-            document.getElementById("gameArea").style.display = "block";
-            updatePlayerList(players);
-            drawCard(playerName);
-        }
-
-        function generateCards(numCards) {
-            const cardContents = [
-                "不能笑",
-                "不能说'不'",
-                "不能摇头",
-                "不能说'是'",
-                "不能摸头",
-                "不能眨眼",
-                "不能说'我'"
-            ];
-            const cards = {};
-            const usedCards = new Set(); // 用于跟踪已使用的卡片
-            for (let i = 0; i < numCards; i++) {
-                let content;
-                do {
-                    content = cardContents[Math.floor(Math.random() * cardContents.length)];
-                } while (usedCards.has(content)); // 确保不重复
-                usedCards.add(content);
-                cards[`card${i}`] = content;
-            }
-            return cards;
-        }
-
-        function updatePlayerList(players) {
-            const playerList = document.getElementById("playerList");
-            playerList.innerHTML = "";
-            for (const player in players) {
-                const playerData = JSON.parse(players[player]);
-                const listItem = document.createElement("li");
-                listItem.classList.add("list-group-item");
-                listItem.textContent = playerData.name;
-                playerList.appendChild(listItem);
-            }
-        }
-
-        async function drawCard(playerName) {
-            const roomName = document.getElementById("roomName").value;
-            const cardKey = `room:${roomName}:cards`;
-            const playerKey = `room:${roomName}:players`;
-
-            const cards = await redisClient.hGetAll(cardKey);
-            const cardKeys = Object.keys(cards);
-            if (cardKeys.length === 0) {
-                console.error("没有可用的卡片");
-                return;
-            }
-            const randomIndex = Math.floor(Math.random() * cardKeys.length);
-            const cardContent = cards[cardKeys[randomIndex]];
-            await redisClient.hSet(playerKey, playerName, JSON.stringify({ name: playerName, card: cardContent }));
-
-            const playerCard = document.getElementById("playerCard");
-            playerCard.textContent = `你的卡片：${cardContent}`;
-        }
-
-        async function sendMessage() {
-            const roomName = document.getElementById("roomName").value;
-            const playerName = document.getElementById("playerName").value;
-            const chatInput = document.getElementById("chatInput");
-            const message = chatInput.value.trim();
-
-            if (!message) return;
-
-            const chatKey = `room:${roomName}:chat`;
-            const timestamp = Date.now();
-            await redisClient.rPush(chatKey, JSON.stringify({ name: playerName, message, timestamp }));
-
-            chatInput.value = "";
-            loadChatMessages();
-        }
-
-        async function loadChatMessages() {
-            const roomName = document.getElementById("roomName").value;
-            const chatKey = `room:${roomName}:chat`;
-            const chatBox = document.getElementById("chatBox");
-
-            const messages = await redisClient.lRange(chatKey, 0, -1);
-            chatBox.innerHTML = "";
-            messages.forEach((msg) => {
-                const messageData = JSON.parse(msg);
-                const messageElement = document.createElement("div");
-                messageElement.textContent = `${messageData.name}: ${messageData.message}`;
-                chatBox.appendChild(messageElement);
-            });
-            chatBox.scrollTop = chatBox.scrollHeight; // 滚动到底部
-        }
-
-        document.getElementById("chatInput").addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                sendMessage();
-            }
+    // 更新玩家列表 UI
+    async function updatePlayersUI() {
+      const players = await fetchPlayers(currentRoom);
+      const listEl = document.getElementById('players-list');
+      listEl.innerHTML = '';
+      if (players) {
+        players.forEach(player => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item';
+          li.textContent = player;
+          listEl.appendChild(li);
         });
+      }
+    }
 
-        setInterval(loadChatMessages, 2000);
-    </script>
+    // 更新聊天 UI
+    async function updateChatUI() {
+      const chatBox = document.getElementById('chat-box');
+      const messages = await fetchChat(currentRoom);
+      chatBox.innerHTML = '';
+      if (messages) {
+        messages.forEach(msg => {
+          try {
+            const chatObj = JSON.parse(msg);
+            const p = document.createElement('p');
+            p.innerHTML = `<strong>${chatObj.user}:</strong> ${chatObj.message}`;
+            chatBox.appendChild(p);
+          } catch (e) {
+            console.error('解析聊天消息失败', msg);
+          }
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    }
+
+    // 更新当前玩家的牌显示
+    async function updateMyCardUI() {
+      const myCard = await fetchMyCard(currentRoom, currentUser);
+      document.getElementById('my-card').textContent = myCard || '等待发牌...';
+    }
+
+    // 定时轮询更新房间状态
+    function startPolling() {
+      if (pollingInterval) clearInterval(pollingInterval);
+      pollingInterval = setInterval(async () => {
+        await updatePlayersUI();
+        await updateChatUI();
+        await updateMyCardUI();
+      }, 3000);
+    }
+
+    // 处理大厅表单提交
+    document.getElementById('room-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let roomId = document.getElementById('room-id').value.trim();
+      if (!roomId) {
+        roomId = generateRoomId();
+      }
+      currentRoom = roomId;
+      currentUser = document.getElementById('player-name').value.trim() || '匿名';
+      maxPlayers = parseInt(document.getElementById('max-players').value) || 4;
+      cardCount = parseInt(document.getElementById('card-count').value) || 10;
+      const cardContent = document.getElementById('card-content').value.trim();
+      if (cardContent) {
+        cardList = cardContent.split(';').map(s => s.trim()).filter(s => s);
+      }
+      const config = {
+        maxPlayers: maxPlayers,
+        cardCount: cardCount,
+        createdAt: Date.now()
+      };
+      await createRoom(roomId, config);
+      await joinRoom(roomId, currentUser);
+      showRoomView();
+      startPolling();
+    });
+
+    // 处理发送聊天消息
+    document.getElementById('send-chat-btn').addEventListener('click', async () => {
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      if (msg) {
+        await sendChat(currentRoom, msg);
+        input.value = '';
+        await updateChatUI();
+      }
+    });
+    document.getElementById('chat-input').addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('send-chat-btn').click();
+      }
+    });
+
+    // 处理“随机发牌”按钮
+    document.getElementById('deal-cards-btn').addEventListener('click', async () => {
+      await dealCards(currentRoom);
+      await updateMyCardUI();
+    });
+
+    // 处理“报告违规”按钮
+    document.getElementById('report-btn').addEventListener('click', async () => {
+      const reportMsg = `${currentUser} 报告违规！`;
+      await sendChat(currentRoom, reportMsg);
+    });
+  </script>
 </body>
 </html>
