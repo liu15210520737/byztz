@@ -1,191 +1,119 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>不要做挑战 - 小潮team 游戏网站</title>
+  <title>不要做挑战 - 小潮team</title>
   <style>
-    /* 重置样式 */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: "Arial", sans-serif; background: #f4f4f4; color: #333; }
-    
-    /* 头部 */
-    header {
-      background: #ff6600;
-      padding: 20px;
-      text-align: center;
-      color: #fff;
+    /* 基础样式 */
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      background-color: #f4f4f4;
+      color: #333;
     }
-    header h1 { font-size: 2.5em; }
-    header p { font-size: 1.2em; margin-top: 5px; }
-    
-    /* 导航 */
+    header {
+      background-color: #FF5722;
+      color: #fff;
+      padding: 20px 0;
+      text-align: center;
+    }
     nav {
       background: #333;
-    }
-    nav ul {
-      list-style: none;
-      display: flex;
-      justify-content: center;
-    }
-    nav ul li { margin: 0 15px; }
-    nav ul li a {
       color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 10px;
       text-decoration: none;
-      font-size: 1.1em;
-      padding: 15px 0;
-      display: block;
     }
-    nav ul li a:hover { color: #ff6600; }
-    
-    /* 主横幅 */
-    .hero {
-      background: url('banner.jpg') no-repeat center center/cover;
-      height: 400px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      text-shadow: 2px 2px 4px #000;
-    }
-    .hero h2 { font-size: 3em; }
-    
-    /* 内容容器 */
     .container {
-      width: 90%;
-      max-width: 1200px;
+      max-width: 800px;
       margin: 20px auto;
-    }
-    section { margin-bottom: 40px; }
-    .section-title {
-      font-size: 2em;
-      margin-bottom: 20px;
-      color: #ff6600;
-      border-bottom: 2px solid #ff6600;
-      display: inline-block;
-      padding-bottom: 5px;
-    }
-    
-    /* 卡片式布局 */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-    }
-    .card {
+      padding: 20px;
       background: #fff;
-      padding: 15px;
-      border-radius: 5px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .card h4 { margin-bottom: 10px; }
-    .card p { font-size: 0.95em; line-height: 1.5; }
-    
-    /* 页脚 */
+    section {
+      margin-bottom: 30px;
+    }
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+    p {
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+    .video {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .video a {
+      color: #FF5722;
+      font-weight: bold;
+      text-decoration: none;
+      border: 2px solid #FF5722;
+      padding: 10px 20px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .video a:hover {
+      background-color: #FF5722;
+      color: #fff;
+    }
     footer {
       background: #333;
       color: #fff;
       text-align: center;
-      padding: 20px;
+      padding: 10px;
+      margin-top: 20px;
       font-size: 0.9em;
     }
   </style>
 </head>
 <body>
-  <!-- 头部 -->
   <header>
     <h1>不要做挑战</h1>
-    <p>小潮team 游戏网站</p>
+    <p>—— 小潮team 独特的创意与幽默</p>
   </header>
-  
-  <!-- 导航 -->
   <nav>
-    <ul>
-      <li><a href="#">主页</a></li>
-      <li><a href="#">游戏资讯</a></li>
-      <li><a href="#">挑战专区</a></li>
-      <li><a href="#">视频合集</a></li>
-      <li><a href="#">社区互动</a></li>
-      <li><a href="#">关于我们</a></li>
-    </ul>
+    <a href="#about">关于</a>
+    <a href="#video">视频展示</a>
+    <a href="#comments">评论互动</a>
   </nav>
-  
-  <!-- 主横幅 -->
-  <div class="hero">
-    <h2>不要做挑战，来玩游戏吧！</h2>
-  </div>
-  
-  <!-- 内容区域 -->
   <div class="container">
-    <!-- 游戏资讯 -->
-    <section id="news">
-      <h3 class="section-title">最新游戏资讯</h3>
-      <div class="grid">
-        <div class="card">
-          <h4>游戏更新一</h4>
-          <p>最新版本上线，带来全新玩法和挑战！</p>
-        </div>
-        <div class="card">
-          <h4>游戏更新二</h4>
-          <p>新活动火热进行中，快来参与赢取奖励！</p>
-        </div>
-        <div class="card">
-          <h4>游戏更新三</h4>
-          <p>探索神秘关卡，体验前所未有的冒险之旅。</p>
-        </div>
+    <section id="about">
+      <h2>关于“不要做挑战”</h2>
+      <p>
+        “不要做挑战”是知名bilibili UP主小潮team的一大特色内容，他通过幽默、夸张的表现手法，向大家展示各种看似刺激但可能暗藏风险的网络挑战。在当下挑战盛行的背景下，小潮team用自己的风格提醒观众：挑战不一定带来快乐，有时反而会带来麻烦。
+      </p>
+      <p>
+        这一主题不仅反映了对某些极端行为的讽刺，也传递出理性对待网络潮流、追求安全与健康生活的理念。无论你是追求刺激的观众，还是理性思考者，都能从中获得别样的启发。
+      </p>
+    </section>
+    
+    <section id="video">
+      <h2>视频展示</h2>
+      <p>
+        快来观看小潮team的“不要做挑战”系列视频，感受他独特的幽默风格与犀利见解：
+      </p>
+      <div class="video">
+        <a href="https://www.bilibili.com/video/BV1e54y1Q7vK/" target="_blank">点击观看《不要做挑战？》</a>
       </div>
     </section>
     
-    <!-- 挑战专区（反向挑战） -->
-    <section id="challenge">
-      <h3 class="section-title">反向挑战专区</h3>
-      <p>在这里，我们拒绝传统挑战，用创意重新定义“挑战”。</p>
-      <div class="grid">
-        <div class="card">
-          <h4>不做挑战案例1</h4>
-          <p>玩家展示如何拒绝极限挑战，反而收获更多乐趣。</p>
-        </div>
-        <div class="card">
-          <h4>不做挑战案例2</h4>
-          <p>创意玩法大集合，拒绝套路，享受自由游戏体验。</p>
-        </div>
-        <div class="card">
-          <h4>不做挑战案例3</h4>
-          <p>精彩创意视频，快来投票支持你喜欢的不挑战模式。</p>
-        </div>
-      </div>
-    </section>
-    
-    <!-- 视频合集 -->
-    <section id="videos">
-      <h3 class="section-title">视频合集</h3>
-      <p>汇集小潮team及其他UP主的“不做挑战”系列视频。</p>
-      <div class="grid">
-        <div class="card">
-          <h4>视频标题1</h4>
-          <p>点击观看视频，体验小潮team的幽默风格。</p>
-        </div>
-        <div class="card">
-          <h4>视频标题2</h4>
-          <p>精彩片段，带你感受不一样的挑战精神。</p>
-        </div>
-        <div class="card">
-          <h4>视频标题3</h4>
-          <p>更多搞笑视频等你来发现。</p>
-        </div>
-      </div>
-    </section>
-    
-    <!-- 社区互动 -->
-    <section id="community">
-      <h3 class="section-title">社区互动</h3>
-      <p>加入我们的社区，分享你的游戏体验和创意。不做挑战，乐在其中！</p>
+    <section id="comments">
+      <h2>评论互动</h2>
+      <p>
+        你对小潮team的“不要做挑战”怎么看？欢迎在下方留言，与大家分享你对各种网络挑战的看法与体验。让我们一起探讨如何在追求乐趣的同时保持理智，远离盲目跟风！
+      </p>
     </section>
   </div>
-  
-  <!-- 页脚 -->
   <footer>
-    <p>&copy; 2025 不要做挑战 - 小潮team 游戏网站. 版权所有.</p>
+    <p>&copy; 2025 小潮team 粉丝社区. All Rights Reserved.</p>
   </footer>
 </body>
 </html>
